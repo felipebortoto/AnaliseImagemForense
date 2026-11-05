@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise Forense de Imagens | Cadeia de Custódia (Art. 158-A CPP)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hash-code {
+            word-break: break-all;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-blue-600 rounded-lg text-white">
+                    <i class="fa-solid fa-fingerprint text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">Sistema Forense de Extração de Imagens</h1>
+                    <p class="text-xs text-slate-400">Conformidade com a Cadeia de Custódia &bull; Art. 158-A do CPP</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800">
+                    <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                    Módulo Forense Ativo
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Upload Section -->
+        <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl mb-8">
+            <h2 class="text-lg font-semibold text-slate-200 mb-2 flex items-center">
+                <i class="fa-solid fa-upload mr-2 text-blue-400"></i> Recepção de Evidências Digitais
+            </h2>
+            <p class="text-sm text-slate-400 mb-4">
+                Selecione ou arraste de 1 a 25 imagens (JPEG, PNG, TIFF). O cálculo do SHA-256 é realizado instantaneamente no fluxo binário antes de qualquer leitura.
+            </p>
+
+            <div id="drop-zone" class="border-2 border-dashed border-slate-600 hover:border-blue-500 rounded-xl p-8 text-center cursor-pointer transition-colors bg-slate-900/40">
+                <i class="fa-solid fa-images text-4xl text-slate-500 mb-3"></i>
+                <p class="text-sm text-slate-300 font-medium">Arraste seus arquivos aqui ou clique para selecionar</p>
+                <p class="text-xs text-slate-500 mt-1">Limite: até 25 mídias por lote de análise</p>
+                <input type="file" id="file-input" multiple accept="image/*" class="hidden">
+            </div>
+
+            <!-- Arquivos selecionados e Botão de Ação -->
+            <div id="selected-files-container" class="mt-4 hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="file-count" class="text-xs font-semibold text-slate-400 uppercase tracking-wider">0 arquivos selecionados</span>
+                    <button id="clear-btn" class="text-xs text-red-400 hover:text-red-300">Limpar seleção</button>
+                </div>
+                <div id="file-list" class="max-h-36 overflow-y-auto space-y-1 pr-2 mb-4"></div>
+                <button id="analyze-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-microscope"></i>
+                    <span>Executar Exame Pericial e Fixação de Custódia</span>
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loading" class="mt-6 text-center hidden">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+                <p class="text-sm text-slate-400 mt-2">Calculando hashes SHA-256 e extraindo metadados EXIF/GPS...</p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden space-y-8">
+            <!-- Summary Banner -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+                    <span class="text-xs text-slate-400 uppercase">Mídias Analisadas</span>
+                    <p id="total-evidences" class="text-2xl font-bold text-white mt-1">0</p>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+                    <span class="text-xs text-slate-400 uppercase">Status da Custódia</span>
+                    <p id="custody-status" class="text-2xl font-bold text-emerald-400 mt-1">100% ÍNTEGRO</p>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl">
+                    <span class="text-xs text-slate-400 uppercase">Fotos Georreferenciadas</span>
+                    <p id="geo-count" class="text-2xl font-bold text-blue-400 mt-1">0</p>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-slate-400 uppercase">Laudo Pericial</span>
+                        <p class="text-xs text-slate-300 mt-1">Formato Markdown (.md)</p>
+                    </div>
+                    <button id="download-report-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1 shadow transition">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Baixar Laudo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs: Mapa e Auditoria -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl overflow-hidden shadow-xl">
+                <div class="border-b border-slate-700 bg-slate-900/50 px-6 flex space-x-6">
+                    <button id="tab-map-btn" class="py-4 text-sm font-semibold text-blue-400 border-b-2 border-blue-500 flex items-center space-x-2">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <span>Mapa Cronológico Espacial</span>
+                    </button>
+                    <button id="tab-custody-btn" class="py-4 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-2">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Auditoria Criptográfica de Hashes</span>
+                    </button>
+                    <button id="tab-report-btn" class="py-4 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-2">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>Prévia do Laudo (.md)</span>
+                    </button>
+                </div>
+
+                <!-- Tab 1: Mapa -->
+                <div id="tab-map" class="p-6">
+                    <div class="w-full h-[520px] rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
+                        <iframe id="map-frame" class="w-full h-full border-0"></iframe>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Auditoria de Custódia -->
+                <div id="tab-custody" class="p-6 hidden space-y-6" id="evidence-cards-container">
+                    <!-- Cards preenchidos dinamicamente -->
+                </div>
+
+                <!-- Tab 3: Prévia do Laudo Markdown -->
+                <div id="tab-report" class="p-6 hidden">
+                    <pre id="report-text" class="bg-slate-950 p-6 rounded-xl border border-slate-700 text-xs text-slate-300 font-mono overflow-x-auto whitespace-pre-wrap max-h-[520px]"></pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Script de Frontend -->
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const selectedContainer = document.getElementById('selected-files-container');
+        const fileList = document.getElementById('file-list');
+        const fileCount = document.getElementById('file-count');
+        const clearBtn = document.getElementById('clear-btn');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('results');
+
+        let selectedFiles = [];
+        let latestMarkdown = "";
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-500'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
+            if (arr.length === 0) return;
+            if (selectedFiles.length + arr.length > 25) {
+                alert("O limite máximo é de 25 fotos por lote pericial.");
+                return;
+            }
+            selectedFiles = [...selectedFiles, ...arr].slice(0, 25);
+            updateFileList();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            if (selectedFiles.length === 0) {
+                selectedContainer.classList.add('hidden');
+                return;
+            }
+            selectedContainer.classList.remove('hidden');
+            fileCount.textContent = `${selectedFiles.length} de 25 arquivos selecionados`;
+
+            selectedFiles.forEach((f, i) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between text-xs bg-slate-900/80 px-3 py-1.5 rounded border border-slate-700/50';
+                item.innerHTML = `
+                    <span class="truncate max-w-xs text-slate-300 font-medium">${f.name}</span>
+                    <span class="text-slate-500">${(f.size / 1024).toFixed(1)} KB</span>
+                `;
+                fileList.appendChild(item);
+            });
+        }
+
+        clearBtn.addEventListener('click', () => {
+            selectedFiles = [];
+            fileInput.value = '';
+            updateFileList();
+        });
+
+        analyzeBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+
+            loading.classList.remove('hidden');
+            analyzeBtn.disabled = true;
+            analyzeBtn.classList.add('opacity-50');
+
+            const formData = new FormData();
+            selectedFiles.forEach(f => formData.append('files', f));
+
+            try {
+                const resp = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.detail || 'Erro na análise forense.');
+                }
+
+                const data = await resp.json();
+                renderResults(data);
+            } catch (err) {
+                alert('Falha no exame pericial: ' + err.message);
+            } finally {
+                loading.classList.add('hidden');
+                analyzeBtn.disabled = false;
+                analyzeBtn.classList.remove('opacity-50');
+            }
+        });
+
+        function renderResults(data) {
+            resultsSection.classList.remove('hidden');
+            document.getElementById('total-evidences').textContent = data.summary.total_evidences;
+            document.getElementById('custody-status').textContent = data.summary.custody_preserved ? "100% ÍNTEGRO" : "DIVERGENTE";
+            document.getElementById('custody-status').className = `text-2xl font-bold mt-1 ${data.summary.custody_preserved ? 'text-emerald-400' : 'text-red-400'}`;
+
+            const geoCount = data.evidences.filter(e => e.metadata.has_gps).length;
+            document.getElementById('geo-count').textContent = geoCount;
+
+            // Injeta o mapa no iframe
+            const mapFrame = document.getElementById('map-frame');
+            mapFrame.srcdoc = data.map_html;
+
+            // Monta os cards de auditoria com espaçamento generoso
+            const cardsContainer = document.getElementById('tab-custody');
+            cardsContainer.innerHTML = '';
+
+            data.evidences.forEach((ev, idx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900/90 border border-slate-700/80 rounded-xl p-6 shadow-md';
+                const isIntact = ev.integrity.is_intact;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-blue-600/30 text-blue-400 text-xs px-2 py-0.5 rounded font-mono font-bold">#${idx + 1}</span>
+                            <h3 class="text-sm font-bold text-white">${ev.file_name}</h3>
+                        </div>
+                        <span class="px-2.5 py-1 rounded text-xs font-bold ${isIntact ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">
+                            ${ev.integrity.status}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-400 mb-6">
+                        <div><b>Câmera/Dispositivo:</b> ${ev.metadata.make || 'N/A'} ${ev.metadata.model || ''}</div>
+                        <div><b>Data Original (EXIF):</b> ${ev.metadata.datetime_original || 'Não informado'}</div>
+                        <div><b>Coordenadas GPS:</b> ${ev.metadata.has_gps ? `${ev.metadata.latitude}, ${ev.metadata.longitude}` : 'Sem dados de GPS'}</div>
+                        <div><b>Tamanho:</b> ${ev.metadata.file_size_bytes} bytes</div>
+                    </div>
+
+                    <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-4">
+                        <div>
+                            <span class="text-xs uppercase text-slate-500 font-semibold block mb-1">SHA-256 Pré-Processamento (Fixação Inicial Art. 158-A):</span>
+                            <div class="hash-code text-xs text-blue-400 bg-slate-900 p-2.5 rounded border border-slate-800 select-all">${ev.integrity.initial_hash}</div>
+                        </div>
+                        <div>
+                            <span class="text-xs uppercase text-slate-500 font-semibold block mb-1">SHA-256 Pós-Processamento (Conferência Final):</span>
+                            <div class="hash-code text-xs text-emerald-400 bg-slate-900 p-2.5 rounded border border-slate-800 select-all">${ev.integrity.final_hash}</div>
+                        </div>
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
+
+            // Laudo Markdown
+            latestMarkdown = data.markdown_report;
+            document.getElementById('report-text').textContent = latestMarkdown;
+
+            // Scroll para resultados
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Tabs switcher
+        const tabMapBtn = document.getElementById('tab-map-btn');
+        const tabCustodyBtn = document.getElementById('tab-custody-btn');
+        const tabReportBtn = document.getElementById('tab-report-btn');
+
+        const tabMap = document.getElementById('tab-map');
+        const tabCustody = document.getElementById('tab-custody');
+        const tabReport = document.getElementById('tab-report');
+
+        function switchTab(activeBtn, activeTab) {
+            [tabMapBtn, tabCustodyBtn, tabReportBtn].forEach(b => {
+                b.className = 'py-4 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-2';
+            });
+            [tabMap, tabCustody, tabReport].forEach(t => t.classList.add('hidden'));
+
+            activeBtn.className = 'py-4 text-sm font-semibold text-blue-400 border-b-2 border-blue-500 flex items-center space-x-2';
+            activeTab.classList.remove('hidden');
+        }
+
+        tabMapBtn.addEventListener('click', () => switchTab(tabMapBtn, tabMap));
+        tabCustodyBtn.addEventListener('click', () => switchTab(tabCustodyBtn, tabCustody));
+        tabReportBtn.addEventListener('click', () => switchTab(tabReportBtn, tabReport));
+
+        // Download Report
+        document.getElementById('download-report-btn').addEventListener('click', () => {
+            if (!latestMarkdown) return;
+            const blob = new Blob([latestMarkdown], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'laudo_pericial_custodia.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
+

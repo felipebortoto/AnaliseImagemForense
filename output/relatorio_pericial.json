@@ -1,0 +1,78 @@
+{
+  "case_info": {
+    "title": "Operacao Rastro Digital",
+    "examiner": "Laboratório de Computação Forense",
+    "legal_foundation": "Art. 158-A a 158-F do Código de Processo Penal (Cadeia de Custódia)",
+    "generated_at_utc": "2026-11-05T18:19:40.725351+00:00",
+    "total_evidences": 2,
+    "intact_evidences": 2,
+    "custody_preserved": true
+  },
+  "evidences": [
+    {
+      "file_name": "evidencia_01.jpg",
+      "source_path": "C:\\Users\\Felipe Bortoto\\Documents\\GitHub\\AnaliseImagemForense\\output\\evidencia_01.jpg",
+      "integrity": {
+        "target_name": "evidencia_01.jpg",
+        "initial_hash": "7d40f975f89261293d8a0c300788288b42c9897fa68cdd8c22c3585a87144aa6",
+        "final_hash": "7d40f975f89261293d8a0c300788288b42c9897fa68cdd8c22c3585a87144aa6",
+        "is_intact": true,
+        "status": "ÍNTEGRO",
+        "timestamp_utc": "2026-11-05T18:19:40.705925+00:00",
+        "legal_basis": "Conformidade com a Cadeia de Custódia (Art. 158-A do Código de Processo Penal)"
+      },
+      "metadata": {
+        "file_name": "evidencia_01.jpg",
+        "file_size_bytes": 907,
+        "has_exif": true,
+        "make": "PericiaLab",
+        "model": "ModelX",
+        "software": null,
+        "datetime_original": "2026:11:05 12:00:00",
+        "datetime_iso": "2026-11-05T12:00:00",
+        "has_gps": true,
+        "latitude": -23.5505,
+        "longitude": -46.633389,
+        "altitude": null,
+        "notes": [],
+        "raw_tags": {
+          "Model": "ModelX",
+          "DateTime": "2026:11:05 12:00:00",
+          "GPSInfo": "102",
+          "Make": "PericiaLab"
+        }
+      }
+    },
+    {
+      "file_name": "evidencia_02.png",
+      "source_path": "C:\\Users\\Felipe Bortoto\\Documents\\GitHub\\AnaliseImagemForense\\output\\evidencia_02.png",
+      "integrity": {
+        "target_name": "evidencia_02.png",
+        "initial_hash": "0fa253f88939b5072b0963be775bfb36793bd9f6f8056e50cb8367977fdcdd3e",
+        "final_hash": "0fa253f88939b5072b0963be775bfb36793bd9f6f8056e50cb8367977fdcdd3e",
+        "is_intact": true,
+        "status": "ÍNTEGRO",
+        "timestamp_utc": "2026-11-05T18:19:40.709030+00:00",
+        "legal_basis": "Conformidade com a Cadeia de Custódia (Art. 158-A do Código de Processo Penal)"
+      },
+      "metadata": {
+        "file_name": "evidencia_02.png",
+        "file_size_bytes": 181,
+        "has_exif": false,
+        "make": null,
+        "model": null,
+        "software": null,
+        "datetime_original": null,
+        "datetime_iso": null,
+        "has_gps": false,
+        "latitude": null,
+        "longitude": null,
+        "altitude": null,
+        "notes": [
+          "Cabeçalho EXIF ausente (provável compressão ou remoção de metadados)."
+        ],
+        "raw_tags": {}
+      }
+    }
+  ]
+}
