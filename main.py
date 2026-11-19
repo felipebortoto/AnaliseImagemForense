@@ -65,7 +65,7 @@ def run_forensic_pipeline(
         else:
             print("    -> EXIF        : Ausente ou removido")
 
-        # 3. Recálculo e Verificação do Hash Final (Pós-processamento)
+        # 3. Recálculo e a Verificação do Hash Final 
         post_hash = calculate_sha256(img_path)
         print(f"    -> SHA-256 Pós : {post_hash}")
 
@@ -182,15 +182,63 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _is_port_free(port: int) -> bool:
+    """Verifica se uma porta TCP está disponível para uso."""
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(("127.0.0.1", port))
+            return True
+    except OSError:
+        return False
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Ponto de entrada da CLI."""
     parser = build_parser()
     args = parser.parse_args(argv)
 
     if args.web:
+        import socket
+        import webbrowser
+        import threading
         import uvicorn
-        print(f"[*] Iniciando servidor web pericial em http://127.0.0.1:{args.port} ...")
-        uvicorn.run("src.server:app", host="127.0.0.1", port=args.port, reload=False)
+
+        port = args.port
+
+        # Auto-detecta uma porta disponível se a solicitada estiver ocupada
+        if not _is_port_free(port):
+            original = port
+            for candidate in [8080, 8081, 8888, 9000, 9090, 5000, 3000]:
+                if _is_port_free(candidate):
+                    port = candidate
+                    break
+            else:
+                print(f"[!] Nenhuma porta disponível encontrada. Libere a porta {original} e tente novamente.")
+                return 1
+            print(f"[!] Porta {original} ocupada. Usando porta {port} automaticamente.")
+
+        url = f"http://127.0.0.1:{port}"
+        print(f"[*] Iniciando servidor web pericial em {url} ...")
+        print(f"[*] Pressione Ctrl+C para encerrar.")
+
+        # Abre o browser automaticamente após 1.5s
+        def _open_browser():
+            import time
+            time.sleep(1.5)
+            webbrowser.open(url)
+
+        threading.Thread(target=_open_browser, daemon=True).start()
+
+        uvicorn.run(
+            "src.server:app",
+            host="127.0.0.1",
+            port=port,
+            reload=True,
+            reload_delay=0.5,
+            timeout_graceful_shutdown=1,
+        )
         return 0
 
     if not args.image:
