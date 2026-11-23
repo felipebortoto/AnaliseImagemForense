@@ -92,6 +92,8 @@ Utiliza a biblioteca Pillow para inspecionar os blocos IFD (Image File Directory
 
 ```text
 AnaliseImagemForense/
+├── run.bat                     # Inicializador rápido para Windows (duplo clique)
+├── run.ps1                     # Script inteligente PowerShell (auto-venv, portas e browser)
 ├── main.py                     # Ponto de entrada CLI e acionador do servidor web
 ├── requirements.txt            # Declaração das dependências do ecossistema Python
 ├── README.md                   # Documentação técnica e operacional
@@ -171,15 +173,35 @@ Artefatos gerados automaticamente na pasta informada:
 
 ### 7.2. Execução da Interface Web Gráfica
 
-Para iniciar o servidor web interativo:
+O projeto disponibiliza métodos simplificados e inteligentes para iniciar a interface web sem necessidade de ativação manual de ambiente virtual ou resolução de conflitos de porta:
 
+#### Opção 1: Inicializador Rápido no Windows (Mais Recomendado)
+Dê um duplo clique no arquivo executável em lote:
+```text
+run.bat
+```
+> O script cuidará automaticamente da localização/criação do ambiente virtual, instalação de dependências, liberação de portas e abertura automática do navegador.
+
+#### Opção 2: PowerShell Inteligente (`run.ps1`)
+Execute diretamente no terminal PowerShell (não necessita ativar `.venv` antes):
+```powershell
+.\run.ps1
+```
+Parâmetros avançados disponíveis:
+- `.\run.ps1 -Port 8080` : Força a utilização de uma porta TCP específica.
+- `.\run.ps1 -Force` : Encerra automaticamente processos travados ocupando a porta sem solicitar confirmação.
+- `.\run.ps1 -NoBrowser` : Inicializa o servidor web sem abrir automaticamente a aba no navegador.
+
+#### Opção 3: Execução Manual via Python
+Com o ambiente virtual ativado:
 ```bash
 python main.py --web
 ```
+> **Nota de Acessibilidade:** O `main.py` possui sistema de auto-fallback de portas (se a porta `8000` estiver em uso, ele migrará automaticamente para `8080`, `8081`, etc.) e abrirá a página no navegador padrão automaticamente. Caso deseje especificar uma porta: `python main.py --web --port 8080`.
 
-Em seguida, abra o navegador web e acesse:
+Uma vez iniciado, o painel pericial estará acessível em:
 ```text
-http://127.0.0.1:8000
+http://127.0.0.1:8000 (ou na porta automaticamente selecionada no console)
 ```
 
 Fluxo de utilização na interface:
@@ -271,6 +293,8 @@ Leverages the Pillow library to inspect EXIF Image File Directories (IFD):
 
 ```text
 AnaliseImagemForense/
+├── run.bat                     # Windows quick launcher (double-click)
+├── run.ps1                     # Intelligent PowerShell script (auto-venv, ports, and browser)
 ├── main.py                     # CLI entrypoint and web server launcher
 ├── requirements.txt            # Python ecosystem dependencies
 ├── README.md                   # Bilingual technical and operational manual
@@ -350,15 +374,35 @@ Generated Artifacts in the Output Directory:
 
 ### 7.2. Running the Graphical Web Interface
 
-To start the local web application:
+The system offers streamlined launchers that eliminate manual virtual environment activation and automatically resolve port conflicts:
 
+#### Option 1: Quick Windows Launcher (Recommended)
+Double-click the batch file in Windows File Explorer:
+```text
+run.bat
+```
+> This script automatically discovers/creates `.venv`, verifies dependencies, allocates a free port, launches the server, and opens your default browser.
+
+#### Option 2: Intelligent PowerShell Script (`run.ps1`)
+Execute directly in PowerShell (no manual virtual environment activation needed):
+```powershell
+.\run.ps1
+```
+Available flags:
+- `.\run.ps1 -Port 8080` : Force a specific TCP port.
+- `.\run.ps1 -Force` : Automatically terminate any lingering process blocking the target port without prompting.
+- `.\run.ps1 -NoBrowser` : Start the web server without launching a browser tab.
+
+#### Option 3: Manual Execution via Python
+With the virtual environment activated:
 ```bash
 python main.py --web
 ```
+> **Accessibility Feature:** `main.py` incorporates automatic port fallback (migrating from `8000` to `8080`, `8081`, etc. if occupied) and automatically launches your web browser after startup. To force a port: `python main.py --web --port 8080`.
 
-Next, open your preferred browser and navigate to:
+Once started, the forensic dashboard will be accessible at:
 ```text
-http://127.0.0.1:8000
+http://127.0.0.1:8000 (or the alternate port displayed in the console)
 ```
 
 Operational Steps:
